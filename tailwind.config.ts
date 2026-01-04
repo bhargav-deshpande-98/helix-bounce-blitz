@@ -56,22 +56,9 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         game: {
+          mint: "hsl(var(--game-mint))",
           red: "hsl(var(--game-red))",
-          blue: "hsl(var(--game-blue))",
-          yellow: "hsl(var(--game-yellow))",
-          green: "hsl(var(--game-green))",
-          purple: "hsl(var(--game-purple))",
-          orange: "hsl(var(--game-orange))",
-          pink: "hsl(var(--game-pink))",
-          cyan: "hsl(var(--game-cyan))",
-        },
-        danger: {
-          dark: "hsl(var(--danger-dark))",
-          light: "hsl(var(--danger-light))",
-        },
-        tower: {
-          base: "hsl(var(--tower-base))",
-          accent: "hsl(var(--tower-accent))",
+          danger: "hsl(var(--game-danger))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -98,21 +85,31 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "bounce-custom": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-15px)" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { boxShadow: "0 6px 20px hsla(350, 100%, 50%, 0.4)" },
+          "50%": { boxShadow: "0 6px 30px hsla(350, 100%, 50%, 0.6)" },
+        },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
         "perfect-pop": {
           "0%": { transform: "scale(0) rotate(-10deg)", opacity: "0" },
           "50%": { transform: "scale(1.3) rotate(5deg)" },
           "100%": { transform: "scale(1) rotate(0deg)", opacity: "1" },
         },
-        "bounce-custom": {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-10px)" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "bounce-custom": "bounce-custom 0.8s ease-in-out infinite",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "fade-in": "fade-in 0.3s ease-out",
         "perfect-pop": "perfect-pop 0.5s ease-out",
-        "bounce-custom": "bounce-custom 0.6s ease-in-out infinite",
       },
     },
   },

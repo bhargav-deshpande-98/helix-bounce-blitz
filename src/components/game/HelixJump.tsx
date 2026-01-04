@@ -7,25 +7,17 @@ import { GameState, createInitialState, saveBestScore } from '@/game/GameEngine'
 
 const HelixJump: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(createInitialState);
-  const [showPerfect, setShowPerfect] = useState(false);
   const [isNewBest, setIsNewBest] = useState(false);
+  const [gameKey, setGameKey] = useState(0); // Force remount of GameScene
 
   const handleStart = useCallback(() => {
+    setGameKey(prev => prev + 1); // Force new game instance
     setGameState((prev) => ({
       ...createInitialState(),
       bestScore: prev.bestScore,
       isPlaying: true,
     }));
     setIsNewBest(false);
-  }, []);
-
-  const handlePerfect = useCallback(() => {
-    setShowPerfect(true);
-    setTimeout(() => setShowPerfect(false), 800);
-  }, []);
-
-  const handleBounce = useCallback(() => {
-    // Could add haptic feedback here
   }, []);
 
   const handleGameOver = useCallback(() => {
@@ -45,6 +37,7 @@ const HelixJump: React.FC = () => {
   }, []);
 
   const handleRestart = useCallback(() => {
+    setGameKey(prev => prev + 1); // Force new game instance
     setGameState((prev) => ({
       ...createInitialState(),
       bestScore: prev.bestScore,
@@ -57,16 +50,15 @@ const HelixJump: React.FC = () => {
     <div className="game-container w-full h-full">
       {/* 3D Game Scene */}
       <GameScene
+        key={gameKey}
         gameState={gameState}
         setGameState={setGameState}
-        onPerfect={handlePerfect}
-        onBounce={handleBounce}
         onGameOver={handleGameOver}
       />
 
       {/* HUD Overlay */}
       {gameState.isPlaying && !gameState.isGameOver && (
-        <GameHUD gameState={gameState} showPerfect={showPerfect} />
+        <GameHUD gameState={gameState} />
       )}
 
       {/* Start Screen */}
