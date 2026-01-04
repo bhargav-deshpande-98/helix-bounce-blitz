@@ -6,23 +6,23 @@
 
 @layer base {
   :root {
-    /* Game Theme - Vibrant & Playful */
-    --background: 25 100% 95%;
-    --foreground: 0 0% 10%;
+    /* Game Theme - Mint/Green matching reference */
+    --background: 150 60% 85%;
+    --foreground: 0 0% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 0 0% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 0 0% 20%;
 
-    --primary: 350 85% 55%;
+    --primary: 350 100% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 90% 55%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 30 20% 90%;
+    --muted: 150 30% 90%;
     --muted-foreground: 0 0% 40%;
 
     --accent: 45 100% 55%;
@@ -34,39 +34,21 @@
     --success: 145 70% 45%;
     --success-foreground: 0 0% 100%;
 
-    --border: 30 30% 85%;
-    --input: 30 30% 85%;
-    --ring: 350 85% 55%;
+    --border: 150 30% 80%;
+    --input: 150 30% 80%;
+    --ring: 350 100% 50%;
 
     --radius: 1rem;
 
     /* Game-specific colors */
-    --game-red: 350 85% 55%;
-    --game-blue: 210 90% 55%;
-    --game-yellow: 45 100% 55%;
-    --game-green: 145 70% 50%;
-    --game-purple: 280 70% 55%;
-    --game-orange: 25 95% 55%;
-    --game-pink: 330 80% 65%;
-    --game-cyan: 185 80% 50%;
-    
-    /* Danger zone */
-    --danger-dark: 0 0% 15%;
-    --danger-light: 0 0% 95%;
-
-    /* Tower colors */
-    --tower-base: 220 15% 25%;
-    --tower-accent: 220 20% 35%;
-
-    /* Gradients */
-    --gradient-sky: linear-gradient(180deg, hsl(25 100% 92%) 0%, hsl(35 100% 85%) 50%, hsl(15 90% 80%) 100%);
-    --gradient-score: linear-gradient(135deg, hsl(350 85% 55%) 0%, hsl(25 95% 55%) 100%);
-    --gradient-perfect: linear-gradient(135deg, hsl(45 100% 55%) 0%, hsl(25 95% 55%) 100%);
+    --game-mint: 150 60% 85%;
+    --game-red: 350 100% 50%;
+    --game-danger: 350 70% 35%;
 
     /* Shadows */
     --shadow-game: 0 10px 40px -10px hsla(0, 0%, 0%, 0.3);
-    --shadow-button: 0 6px 20px -5px hsla(350, 85%, 55%, 0.4);
-    --shadow-glow: 0 0 30px hsla(350, 85%, 55%, 0.3);
+    --shadow-button: 0 6px 20px -5px hsla(350, 100%, 50%, 0.4);
+    --shadow-glow: 0 0 30px hsla(350, 100%, 50%, 0.3);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -88,7 +70,7 @@
     --popover: 220 20% 15%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 350 85% 60%;
+    --primary: 350 100% 55%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 80% 50%;
@@ -105,7 +87,7 @@
 
     --border: 220 15% 25%;
     --input: 220 15% 25%;
-    --ring: 350 85% 60%;
+    --ring: 350 100% 55%;
     
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -125,7 +107,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
     touch-action: none;
     user-select: none;
@@ -145,38 +127,21 @@
 @layer components {
   .game-container {
     @apply w-full h-full relative;
-    background: var(--gradient-sky);
+    background-color: hsl(var(--game-mint));
   }
 
   .score-display {
     font-family: 'Russo One', sans-serif;
-    background: var(--gradient-score);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 0 4px 20px hsla(350, 85%, 55%, 0.3);
-  }
-
-  .perfect-text {
-    font-family: 'Russo One', sans-serif;
-    background: var(--gradient-perfect);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: perfectPop 0.5s ease-out;
-  }
-
-  .level-indicator {
-    @apply text-sm font-bold;
-    font-family: 'Orbitron', sans-serif;
+    color: hsl(var(--foreground));
+    text-shadow: 2px 2px 0px rgba(255,255,255,0.5);
   }
 
   .game-button {
-    @apply px-8 py-4 rounded-full font-bold text-lg;
-    background: var(--gradient-score);
+    @apply px-12 py-4 rounded-full font-bold text-xl;
+    background: hsl(var(--primary));
     color: hsl(var(--primary-foreground));
     box-shadow: var(--shadow-button);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
   }
 
   .game-button:hover {
@@ -185,24 +150,39 @@
   }
 
   .game-button:active {
-    transform: translateY(0) scale(0.98);
-  }
-
-  .hud-panel {
-    @apply rounded-2xl p-4;
-    background: hsla(0, 0%, 100%, 0.9);
-    backdrop-filter: blur(10px);
-    box-shadow: var(--shadow-game);
-  }
-
-  .bounce-counter {
-    @apply rounded-full px-4 py-2;
-    background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(210 70% 45%) 100%);
+    transform: translateY(0) scale(0.95);
   }
 }
 
 @layer utilities {
-  @keyframes perfectPop {
+  @keyframes bounce-custom {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-15px);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 6px 20px hsla(350, 100%, 50%, 0.4);
+    }
+    50% {
+      box-shadow: 0 6px 30px hsla(350, 100%, 50%, 0.6);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes perfect-pop {
     0% {
       transform: scale(0) rotate(-10deg);
       opacity: 0;
@@ -216,61 +196,19 @@
     }
   }
 
-  @keyframes bounce {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% {
-      box-shadow: 0 0 20px hsla(350, 85%, 55%, 0.4);
-    }
-    50% {
-      box-shadow: 0 0 40px hsla(350, 85%, 55%, 0.7);
-    }
-  }
-
-  @keyframes slide-up {
-    from {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  .animate-perfect-pop {
-    animation: perfectPop 0.5s ease-out;
-  }
-
   .animate-bounce-custom {
-    animation: bounce 0.6s ease-in-out infinite;
+    animation: bounce-custom 0.8s ease-in-out infinite;
   }
 
   .animate-pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
   }
 
-  .animate-slide-up {
-    animation: slide-up 0.5s ease-out;
-  }
-
   .animate-fade-in {
     animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-perfect-pop {
+    animation: perfect-pop 0.5s ease-out;
   }
 }
