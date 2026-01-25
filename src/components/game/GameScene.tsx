@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
-import { GAME_CONFIG, GameState, saveBestScore } from '@/game/GameEngine';
+import { GAME_CONFIG, GameState, saveBestScore, getDifficultyParams } from '@/game/GameEngine';
 
 interface GameSceneProps {
   gameState: GameState;
@@ -37,20 +37,21 @@ const GameScene: React.FC<GameSceneProps> = ({
     isPlayingRef.current = gameState.isPlaying;
   }, [gameState.isGameOver, gameState.isPlaying]);
 
-  const createRing = useCallback((parentGroup: THREE.Group, color: number, addDanger: boolean) => {
-    const gapSize = Math.random() * 0.8 + 0.7;
+  const createRing = useCallback((parentGroup: THREE.Group, color: number, addDanger: boolean, level: number) => {
+    const difficulty = getDifficultyParams(level);
+    const gapSize = Math.random() * difficulty.gapRange + difficulty.gapMin;
     const gapStart = Math.random() * Math.PI * 2;
     const totalArc = (Math.PI * 2) - gapSize;
-    
+
     // Safe platform segment
     const safeGeo = new THREE.CylinderGeometry(
-      GAME_CONFIG.PLATFORM_RADIUS, 
       GAME_CONFIG.PLATFORM_RADIUS,
-      0.5, 
-      64, 
-      1, 
+      GAME_CONFIG.PLATFORM_RADIUS,
+      0.5,
+      64,
+      1,
       false,
-      gapStart + gapSize, 
+      gapStart + gapSize,
       totalArc
     );
     const safeMat = new THREE.MeshLambertMaterial({ color });
@@ -60,11 +61,11 @@ const GameScene: React.FC<GameSceneProps> = ({
     safeMesh.receiveShadow = true;
     parentGroup.add(safeMesh);
 
-    // Add danger segment
-    if (addDanger && Math.random() > 0.4) {
-      const dangerSize = 0.5 + Math.random() * 0.5;
+    // Add danger segment (probability increases with difficulty)
+    if (addDanger && Math.random() < difficulty.dangerProbability) {
+      const dangerSize = difficulty.dangerMin + Math.random() * difficulty.dangerRange;
       const dangerStart = gapStart + gapSize + 0.2;
-      
+
       if (dangerSize < totalArc - 0.5) {
         const dangerGeo = new THREE.CylinderGeometry(
           GAME_CONFIG.PLATFORM_RADIUS + 0.05,
@@ -86,7 +87,7 @@ const GameScene: React.FC<GameSceneProps> = ({
 
   const generateLevels = useCallback((towerGroup: THREE.Group) => {
     let mainColor = GAME_CONFIG.COLORS[Math.floor(Math.random() * GAME_CONFIG.COLORS.length)];
-    
+
     for (let i = 0; i < GAME_CONFIG.PLATFORM_COUNT; i++) {
       const y = -i * GAME_CONFIG.LEVEL_GAP;
       const levelGroup = new THREE.Group();
@@ -95,7 +96,7 @@ const GameScene: React.FC<GameSceneProps> = ({
 
       // First level - no danger
       if (i === 0) {
-        createRing(levelGroup, mainColor, false);
+        createRing(levelGroup, mainColor, false, i);
         continue;
       }
 
@@ -104,7 +105,7 @@ const GameScene: React.FC<GameSceneProps> = ({
         mainColor = GAME_CONFIG.COLORS[Math.floor(Math.random() * GAME_CONFIG.COLORS.length)];
       }
 
-      createRing(levelGroup, mainColor, true);
+      createRing(levelGroup, mainColor, true, i);
     }
 
     // Finish platform
