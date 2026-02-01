@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
 import { GAME_CONFIG, GameState, saveBestScore, getDifficultyParams } from '@/game/GameEngine';
+import { playBounceSound, playCrackSound, playBreakSound, playDangerSound, playLevelSound, playGameOverSound } from '@/lib/sounds';
 
 interface GameSceneProps {
   gameState: GameState;
@@ -31,6 +32,14 @@ const GameScene: React.FC<GameSceneProps> = ({
   const isGameOverRef = useRef(false);
   const isPlayingRef = useRef(false);
 
+  // Break animation particles
+  interface BreakParticle {
+    mesh: THREE.Mesh;
+    velocity: THREE.Vector3;
+    life: number;
+  }
+  const breakParticlesRef = useRef<BreakParticle[]>([]);
+
   // Update refs when gameState changes
   useEffect(() => {
     isGameOverRef.current = gameState.isGameOver;
@@ -56,7 +65,7 @@ const GameScene: React.FC<GameSceneProps> = ({
     );
     const safeMat = new THREE.MeshLambertMaterial({ color });
     const safeMesh = new THREE.Mesh(safeGeo, safeMat);
-    safeMesh.userData = { type: 'safe' };
+    safeMesh.userData = { type: 'safe', bouncesRemaining: 3, originalColor: color };
     safeMesh.castShadow = true;
     safeMesh.receiveShadow = true;
     parentGroup.add(safeMesh);
@@ -186,8 +195,66 @@ const GameScene: React.FC<GameSceneProps> = ({
     camera.lookAt(0, camera.position.y - 20, 0);
   }, []);
 
+  const spawnBreakParticles = useCallback((worldPos: THREE.Vector3, color: number) => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+
+    const particleCount = 8;
+    for (let i = 0; i < particleCount; i++) {
+      const geo = new THREE.BoxGeometry(0.4, 0.15, 0.4);
+      const mat = new THREE.MeshLambertMaterial({ color });
+      const piece = new THREE.Mesh(geo, mat);
+      piece.position.copy(worldPos);
+
+      // Random offset from center
+      const angle = (i / particleCount) * Math.PI * 2 + Math.random() * 0.5;
+      const radius = 2 + Math.random() * 2;
+      piece.position.x += Math.cos(angle) * radius;
+      piece.position.z += Math.sin(angle) * radius;
+
+      scene.add(piece);
+
+      const speed = 0.1 + Math.random() * 0.1;
+      breakParticlesRef.current.push({
+        mesh: piece,
+        velocity: new THREE.Vector3(
+          Math.cos(angle) * speed,
+          0.15 + Math.random() * 0.1,
+          Math.sin(angle) * speed
+        ),
+        life: 1.0,
+      });
+    }
+  }, []);
+
+  const updateBreakParticles = useCallback(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+
+    const particles = breakParticlesRef.current;
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.velocity.y -= 0.012; // gravity
+      p.mesh.position.add(p.velocity);
+      p.mesh.rotation.x += 0.1;
+      p.mesh.rotation.z += 0.08;
+      p.life -= 0.04;
+
+      if (p.life <= 0) {
+        scene.remove(p.mesh);
+        p.mesh.geometry.dispose();
+        (p.mesh.material as THREE.Material).dispose();
+        particles.splice(i, 1);
+      } else {
+        (p.mesh.material as THREE.MeshLambertMaterial).opacity = p.life;
+        (p.mesh.material as THREE.MeshLambertMaterial).transparent = true;
+      }
+    }
+  }, []);
+
   const handleGameOver = useCallback(() => {
     isGameOverRef.current = true;
+    playGameOverSound();
     saveBestScore(highestLevelPassedRef.current * 10);
     onGameOver();
   }, [onGameOver]);
@@ -218,12 +285,49 @@ const GameScene: React.FC<GameSceneProps> = ({
           const type = hit.object.userData.type;
 
           if (type === 'danger') {
+            playDangerSound();
             handleGameOver();
             return;
           } else if (type === 'safe' || type === 'finish') {
             // Bounce off platform
             ball.position.y = hit.point.y + GAME_CONFIG.BALL_RADIUS;
             ballVelocityYRef.current = GAME_CONFIG.BOUNCE_FORCE;
+            playBounceSound();
+
+            // Platform break mechanic (safe platforms only)
+            if (type === 'safe') {
+              const mesh = hit.object as THREE.Mesh;
+              const ud = mesh.userData;
+              ud.bouncesRemaining--;
+
+              if (ud.bouncesRemaining <= 0) {
+                // Break the platform — hide instantly, spawn particles
+                playBreakSound();
+                ud.type = 'broken';
+                mesh.visible = false;
+
+                // Get world position for particle spawn
+                const worldPos = new THREE.Vector3();
+                mesh.getWorldPosition(worldPos);
+                spawnBreakParticles(worldPos, ud.originalColor);
+              } else {
+                // Visual crack feedback — tint toward red
+                playCrackSound(ud.bouncesRemaining);
+                const mat = mesh.material as THREE.MeshLambertMaterial;
+                if (ud.bouncesRemaining === 2) {
+                  // First hit — slight darken
+                  const c = new THREE.Color(ud.originalColor);
+                  c.lerp(new THREE.Color(0x888888), 0.25);
+                  mat.color.set(c);
+                } else if (ud.bouncesRemaining === 1) {
+                  // Second hit — tint red/orange warning
+                  const c = new THREE.Color(ud.originalColor);
+                  c.lerp(new THREE.Color(0xff4444), 0.5);
+                  mat.color.set(c);
+                }
+              }
+            }
+
             return;
           }
         }
@@ -237,6 +341,7 @@ const GameScene: React.FC<GameSceneProps> = ({
     const currentLevel = Math.floor(Math.abs(ball.position.y) / GAME_CONFIG.LEVEL_GAP);
     if (currentLevel > highestLevelPassedRef.current) {
       highestLevelPassedRef.current = currentLevel;
+      playLevelSound();
       setGameState(prev => ({
         ...prev,
         score: highestLevelPassedRef.current * 10,
@@ -258,10 +363,13 @@ const GameScene: React.FC<GameSceneProps> = ({
       updateCameraPosition();
     }
 
+    // Always update break particles (even during game over for visual)
+    updateBreakParticles();
+
     if (rendererRef.current && sceneRef.current && cameraRef.current) {
       rendererRef.current.render(sceneRef.current, cameraRef.current);
     }
-  }, [updatePhysics, updateCameraPosition]);
+  }, [updatePhysics, updateCameraPosition, updateBreakParticles]);
 
   // Initialize Three.js scene
   useEffect(() => {

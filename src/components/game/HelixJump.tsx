@@ -4,6 +4,7 @@ import GameHUD from './GameHUD';
 import StartScreen from './StartScreen';
 import GameOverScreen from './GameOverScreen';
 import { GameState, createInitialState, saveBestScore } from '@/game/GameEngine';
+import { initAudio } from '@/lib/sounds';
 
 const HelixJump: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(createInitialState);
@@ -11,6 +12,7 @@ const HelixJump: React.FC = () => {
   const [gameKey, setGameKey] = useState(0); // Force remount of GameScene
 
   const handleStart = useCallback(() => {
+    initAudio();
     setGameKey(prev => prev + 1); // Force new game instance
     setGameState((prev) => ({
       ...createInitialState(),
@@ -37,6 +39,7 @@ const HelixJump: React.FC = () => {
   }, []);
 
   const handleRestart = useCallback(() => {
+    initAudio();
     setGameKey(prev => prev + 1); // Force new game instance
     setGameState((prev) => ({
       ...createInitialState(),
